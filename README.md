@@ -1,6 +1,6 @@
 # distribuir_practica.sh — Distribución masiva de prácticas
 
-Script de distribución masiva y automatizada de archivos comprimidos a los equipos del aula para la asignatura de **Sistemas Distribuidos** (EPS, Universidad Pablo de Olavide).
+Script de distribución masiva y automatizada de archivos comprimidos a los equipos del aula (EPS, Universidad Pablo de Olavide).
 
 ## ¿Qué hace?
 
