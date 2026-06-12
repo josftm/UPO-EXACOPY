@@ -87,8 +87,6 @@ Los equipos que fallen quedan registrados en el log consolidado de errores:
 
 ```
 .
-├── install_entorno.sh          # Instalación masiva del entorno de desarrollo
 ├── distribuir_practica.sh      # Distribución masiva de archivos de prácticas
-├── README.md                   # Documentación de install_entorno.sh
-└── README_distribuir_practica.md
+├── README.md                   
 ```
