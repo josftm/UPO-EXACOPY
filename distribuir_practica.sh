@@ -6,8 +6,6 @@
 # Ejemplo: ./distribuir_practica.sh practica1.tar.gz 192.168.1.1 192.168.1.30
 # =============================================================================
 
-set -euo pipefail
-
 # --- Colores ---
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -75,32 +73,26 @@ fi
 copy_to_host() {
     local IP="$1"
     local LOG="${LOG_DIR}/copy_${IP//./_}.log"
+    local NOMBRE_ARCHIVO
+    NOMBRE_ARCHIVO=$(basename "$ARCHIVO")
     local START_TIME
     START_TIME=$(date +%s)
-    local EXIT_CODE=0
 
-    # Opciones SSH comunes
     local SSH_OPTS=(
         -o StrictHostKeyChecking=no
         -o UserKnownHostsFile=/dev/null
         -o ConnectTimeout=15
         -o ServerAliveInterval=30
-        -o BatchMode=no
     )
 
-    # 1) Crear la carpeta destino en el Escritorio del alumno
+    # Crear carpeta y transferir el archivo en una sola conexión SSH.
+    # El archivo se envía por stdin y se guarda con cat en el destino.
+    # $HOME se expande en el shell remoto; no hay ambigüedad con ~.
+    local EXIT_CODE=0
     sshpass -p "$SSH_PASS" ssh "${SSH_OPTS[@]}" \
         "$SSH_USER@$IP" \
-        "mkdir -p \"\${HOME}/Escritorio/${FOLDER_NAME}\"" \
-        >> "$LOG" 2>&1 || EXIT_CODE=$?
-
-    # 2) Copiar el archivo (solo si el paso anterior fue bien)
-    if [ "$EXIT_CODE" -eq 0 ]; then
-        sshpass -p "$SSH_PASS" scp "${SSH_OPTS[@]}" \
-            "$ARCHIVO" \
-            "$SSH_USER@$IP:\${HOME}/Escritorio/${FOLDER_NAME}/" \
-            >> "$LOG" 2>&1 || EXIT_CODE=$?
-    fi
+        "mkdir -p \"\$HOME/Escritorio/${FOLDER_NAME}\" && cat > \"\$HOME/Escritorio/${FOLDER_NAME}/${NOMBRE_ARCHIVO}\"" \
+        < "$ARCHIVO" >> "$LOG" 2>&1 || EXIT_CODE=$?
 
     local END_TIME
     END_TIME=$(date +%s)
@@ -153,7 +145,9 @@ echo ""
 
 FAILED=0
 for IP in "${!JOB_PIDS[@]}"; do
-    wait "${JOB_PIDS[$IP]}" || (( FAILED++ )) || true
+    if ! wait "${JOB_PIDS[$IP]}"; then
+        (( FAILED++ )) || true
+    fi
 done
 
 echo ""
