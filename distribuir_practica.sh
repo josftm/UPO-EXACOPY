@@ -172,15 +172,30 @@ delete_from_host() {
     local START_TIME
     START_TIME=$(date +%s)
 
+    # Verificar primero si la carpeta existe en el equipo remoto
+    local DIR_EXISTS=0
+    sshpass -p "$SSH_PASS" ssh "${SSH_OPTS[@]}" \
+        "$SSH_USER@$IP" \
+        "test -d \"\$HOME/Escritorio/${FOLDER_NAME}\"" \
+        >> "$LOG" 2>&1 || DIR_EXISTS=1
+
+    local END_TIME
+    END_TIME=$(date +%s)
+    local ELAPSED=$(( END_TIME - START_TIME ))
+
+    if [ "$DIR_EXISTS" -ne 0 ]; then
+        echo -e "${YELLOW}⚠ [$(date '+%H:%M:%S')] ${IP} — la carpeta no existe, se omite (${ELAPSED}s).${NC}"
+        return 0
+    fi
+
     local EXIT_CODE=0
     sshpass -p "$SSH_PASS" ssh "${SSH_OPTS[@]}" \
         "$SSH_USER@$IP" \
         "rm -rf \"\$HOME/Escritorio/${FOLDER_NAME}\"" \
         >> "$LOG" 2>&1 || EXIT_CODE=$?
 
-    local END_TIME
     END_TIME=$(date +%s)
-    local ELAPSED=$(( END_TIME - START_TIME ))
+    ELAPSED=$(( END_TIME - START_TIME ))
 
     if [ "$EXIT_CODE" -eq 0 ]; then
         echo -e "${GREEN}✔ [$(date '+%H:%M:%S')] ${IP} — carpeta eliminada (${ELAPSED}s).${NC}"

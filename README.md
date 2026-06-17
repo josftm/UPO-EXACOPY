@@ -90,8 +90,11 @@ La contraseña no se almacena en ningún fichero; reside únicamente en memoria 
 ▶ Eliminando en 192.168.1.2...
 ...
 ✔ [10:05:03] 192.168.1.1 — carpeta eliminada (3s).
-✔ [10:05:04] 192.168.1.2 — carpeta eliminada (4s).
+⚠ [10:05:04] 192.168.1.2 — la carpeta no existe, se omite (2s).
+✔ [10:05:05] 192.168.1.3 — carpeta eliminada (4s).
 ```
+
+Si la carpeta no existe en un equipo, el script lo indica con un aviso en lugar de reportarlo como éxito o error. El equipo no se cuenta como fallido en el resumen final.
 
 ## Logs
 
@@ -117,7 +120,6 @@ Los equipos que fallen quedan registrados en el log consolidado de errores:
 
 ```
 .
-├── distribuir_practica.sh      # Versión original (solo distribución)
-├── gestionar_practica.sh       # Versión ampliada (distribución y eliminación)
+├── distribuir_practica.sh      # Script principal (distribución y eliminación)
 └── README.md
 ```
