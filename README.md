@@ -1,10 +1,13 @@
-# distribuir_practica.sh — Distribución masiva de prácticas
+# gestionar_practica.sh — Distribución y eliminación masiva de prácticas
 
-Script de distribución masiva y automatizada de archivos comprimidos a los equipos del aula (EPS, Universidad Pablo de Olavide).
+Script de gestión masiva y automatizada de archivos de prácticas en los equipos del aula para la asignatura de **Sistemas Distribuidos** (EPS, Universidad Pablo de Olavide).
 
 ## ¿Qué hace?
 
-Dado un archivo comprimido y un rango de IPs, el script se conecta por SSH a cada equipo del aula de forma **asíncrona** y copia el archivo a `~/Escritorio/<nombre_carpeta>/`, donde el nombre de la carpeta lo introduce el profesor al iniciar el script.
+Dado un rango de IPs, el script se conecta por SSH a cada equipo del aula de forma **asíncrona** y ejecuta la operación seleccionada mediante una bandera:
+
+- **`-d` (distribuir):** crea `~/Escritorio/<carpeta>/` en cada equipo y copia allí el archivo comprimido indicado.
+- **`-e` (eliminar):** borra `~/Escritorio/<carpeta>/` en cada equipo. Solicita confirmación antes de proceder.
 
 ## Requisitos
 
@@ -15,20 +18,26 @@ Dado un archivo comprimido y un rango de IPs, el script se conecta por SSH a cad
 ## Uso
 
 ```bash
-chmod +x distribuir_practica.sh
-./distribuir_practica.sh <archivo_comprimido> <IP_inicial> <IP_final>
+chmod +x gestionar_practica.sh
+
+# Distribuir un archivo
+./gestionar_practica.sh -d <archivo_comprimido> <IP_inicial> <IP_final>
+
+# Eliminar la carpeta de práctica
+./gestionar_practica.sh -e <IP_inicial> <IP_final>
 ```
 
-**Ejemplo** — enviar `practica1.tar.gz` a 30 equipos del rango `192.168.1.1` a `192.168.1.30`:
+**Ejemplos:**
 
 ```bash
-./distribuir_practica.sh practica1.tar.gz 192.168.1.1 192.168.1.30
+./gestionar_practica.sh -d practica1.tar.gz 192.168.1.1 192.168.1.30
+./gestionar_practica.sh -e 192.168.1.1 192.168.1.30
 ```
 
-Al iniciar, el script solicitará interactivamente:
+En ambos casos el script solicita interactivamente el nombre de la carpeta y las credenciales SSH:
 
 ```
-Introduce el nombre de la carpeta de destino en el Escritorio de los alumnos:
+Introduce el nombre de la carpeta en el Escritorio de los alumnos:
   Nombre de carpeta: Practica1
 
 Introduce las credenciales SSH para los equipos remotos:
@@ -36,30 +45,52 @@ Introduce las credenciales SSH para los equipos remotos:
   Contraseña:
 ```
 
-El archivo quedará en `~/Escritorio/Practica1/practica1.tar.gz` en cada equipo.  
+En modo eliminación se muestra además una confirmación adicional:
+
+```
+⚠  Se eliminará ~/Escritorio/Practica1/ en todos los equipos del rango.
+  ¿Confirmar? (s/N):
+```
+
 La contraseña no se almacena en ningún fichero; reside únicamente en memoria durante la ejecución.
 
 ## Salida esperada
 
+**Distribución:**
 ```
 ======================================================
-  Distribución masiva de práctica
+  Modo:     Distribución
   Archivo:  practica1.tar.gz
-  Destino:  ~/Escritorio/Practica1/
+  Carpeta:  ~/Escritorio/Practica1/
   Rango:    192.168.1.1 → 192.168.1.30  (30 equipos)
   Usuario SSH: eps
-  Logs: /tmp/distribuir_practica_logs/
+  Logs: /tmp/gestionar_practica_logs/
 ======================================================
 
 ▶ Enviando a 192.168.1.1...
 ▶ Enviando a 192.168.1.2...
 ...
-
 ⏳ Esperando a que terminen los 30 equipos...
 
 ✔ [10:03:15] 192.168.1.2 — copia completada (8s).
 ✔ [10:03:17] 192.168.1.1 — copia completada (10s).
+```
+
+**Eliminación:**
+```
+======================================================
+  Modo:     Eliminación
+  Carpeta:  ~/Escritorio/Practica1/
+  Rango:    192.168.1.1 → 192.168.1.30  (30 equipos)
+  Usuario SSH: eps
+  Logs: /tmp/gestionar_practica_logs/
+======================================================
+
+▶ Eliminando en 192.168.1.1...
+▶ Eliminando en 192.168.1.2...
 ...
+✔ [10:05:03] 192.168.1.1 — carpeta eliminada (3s).
+✔ [10:05:04] 192.168.1.2 — carpeta eliminada (4s).
 ```
 
 ## Logs
@@ -67,15 +98,14 @@ La contraseña no se almacena en ningún fichero; reside únicamente en memoria 
 Cada equipo genera un log individual en el equipo del profesor:
 
 ```
-/tmp/distribuir_practica_logs/copy_192_168_1_1.log
-/tmp/distribuir_practica_logs/copy_192_168_1_2.log
-...
+/tmp/gestionar_practica_logs/copy_192_168_1_1.log    # modo -d
+/tmp/gestionar_practica_logs/delete_192_168_1_1.log  # modo -e
 ```
 
 Los equipos que fallen quedan registrados en el log consolidado de errores:
 
 ```
-/tmp/distribuir_practica_logs/errores.log
+/tmp/gestionar_practica_logs/errores.log
 ```
 
 ## Seguridad
@@ -87,6 +117,7 @@ Los equipos que fallen quedan registrados en el log consolidado de errores:
 
 ```
 .
-├── distribuir_practica.sh      # Distribución masiva de archivos de prácticas
-├── README.md                   
+├── distribuir_practica.sh      # Versión original (solo distribución)
+├── gestionar_practica.sh       # Versión ampliada (distribución y eliminación)
+└── README.md
 ```
